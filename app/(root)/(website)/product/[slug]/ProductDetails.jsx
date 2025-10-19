@@ -217,6 +217,13 @@ const ProductDetails = ({ product, variant, colors, sizes, reviewCount }) => {
                             </Button>
                         }
 
+                        {/* Rent button, visible when rent is enabled on product */}
+                        {product?.rentAvailable && product?.rentLink && (
+                            <div className="mt-3">
+                                <a href={product.rentLink} target="_blank" rel="noreferrer" className="w-full inline-block text-center bg-rose-600 text-white py-3 rounded-full">Rent This Item</a>
+                            </div>
+                        )}
+
 
                     </div>
 

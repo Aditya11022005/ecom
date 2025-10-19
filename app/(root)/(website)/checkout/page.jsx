@@ -45,6 +45,8 @@ const Checkout = () => {
     const [totalAmount, setTotalAmount] = useState(0)
     const [couponLoading, setCouponLoading] = useState(false)
     const [couponCode, setCouponCode] = useState('')
+    const [shippingCharge, setShippingCharge] = useState(99)
+    const [paymentMethod, setPaymentMethod] = useState('RAZORPAY')
 
     const [placingOrder, setPlacingOrder] = useState(false)
     const [savingOrder, setSavingOrder] = useState(false)
@@ -67,9 +69,10 @@ const Checkout = () => {
 
         const discount = cartProducts.reduce((sum, product) => sum + ((product.mrp - product.sellingPrice) * product.qty), 0)
 
-        setSubTotal(subTotalAmount)
-        setDiscount(discount)
-        setTotalAmount(subTotalAmount)
+    setSubTotal(subTotalAmount)
+    setDiscount(discount)
+    // include shipping charge by default
+    setTotalAmount(subTotalAmount + shippingCharge)
 
         couponForm.setValue('minShoppingAmount', subTotalAmount)
 
@@ -102,8 +105,10 @@ const Checkout = () => {
 
             const discountPercentage = response.data.discountPercentage
             // get coupon discount amount 
-            setCouponDiscountAmount((subtotal * discountPercentage) / 100)
-            setTotalAmount(subtotal - ((subtotal * discountPercentage) / 100))
+            const couponAmt = (subtotal * discountPercentage) / 100
+            setCouponDiscountAmount(couponAmt)
+            // total includes shipping
+            setTotalAmount(subtotal - couponAmt + shippingCharge)
             showToast('success', response.message)
             setCouponCode(couponForm.getValues('code'))
             setIsCouponApplied(true)
@@ -120,7 +125,7 @@ const Checkout = () => {
         setIsCouponApplied(false)
         setCouponCode('')
         setCouponDiscountAmount(0)
-        setTotalAmount(subtotal)
+        setTotalAmount(subtotal + shippingCharge)
     }
 
 
@@ -178,9 +183,54 @@ const Checkout = () => {
     }
 
     const placeOrder = async (formData) => {
- 
         setPlacingOrder(true)
         try {
+            // Build products payload
+            const products = verifiedCartData.map((cartItem) => (
+                {
+                    productId: cartItem.productId,
+                    variantId: cartItem.variantId,
+                    name: cartItem.name,
+                    qty: cartItem.qty,
+                    mrp: cartItem.mrp,
+                    sellingPrice: cartItem.sellingPrice,
+                }
+            ))
+
+            // If payment method is COD, skip Razorpay and directly save order
+            if (paymentMethod === 'COD') {
+                setSavingOrder(true)
+                const payload = {
+                    ...formData,
+                    paymentMethod: 'COD',
+                    products: products,
+                    subtotal: subtotal,
+                    discount: discount,
+                    couponDiscountAmount: couponDiscountAmount,
+                    shippingCharge: shippingCharge,
+                    totalAmount: totalAmount
+                }
+
+                const { data: paymentResponseData } = await axios.post('/api/payment/save-order', payload)
+
+                if (paymentResponseData.success) {
+                    showToast('success', paymentResponseData.message)
+                    dispatch(clearCart())
+                    orderForm.reset()
+                    // use returned order _id from API
+                    const orderId = paymentResponseData.data
+                    router.push(WEBSITE_ORDER_DETAILS(orderId))
+                    setSavingOrder(false)
+                } else {
+                    showToast('error', paymentResponseData.message)
+                    setSavingOrder(false)
+                }
+
+                setPlacingOrder(false)
+                return
+            }
+
+            // Otherwise proceed with Razorpay
             const generateOrderId = await getOrderId(totalAmount)
             if (!generateOrderId.success) {
                 throw new Error(generateOrderId.message)
@@ -198,24 +248,16 @@ const Checkout = () => {
                 "order_id": order_id,
                 "handler": async function (response) {
                     setSavingOrder(true)
-                    const products = verifiedCartData.map((cartItem) => (
-                        {
-                            productId: cartItem.productId,
-                            variantId: cartItem.variantId,
-                            name: cartItem.name,
-                            qty: cartItem.qty,
-                            mrp: cartItem.mrp,
-                            sellingPrice: cartItem.sellingPrice,
-                        }
-                    ))
 
                     const { data: paymentResponseData } = await axios.post('/api/payment/save-order', {
                         ...formData,
                         ...response,
+                        paymentMethod: 'RAZORPAY',
                         products: products,
                         subtotal: subtotal,
                         discount: discount,
                         couponDiscountAmount: couponDiscountAmount,
+                        shippingCharge: shippingCharge,
                         totalAmount: totalAmount
                     })
 
@@ -223,7 +265,9 @@ const Checkout = () => {
                         showToast('success', paymentResponseData.message)
                         dispatch(clearCart())
                         orderForm.reset()
-                        router.push(WEBSITE_ORDER_DETAILS(response.razorpay_order_id))
+                        // saved order id returned in paymentResponseData.data
+                        const savedOrderId = paymentResponseData.data
+                        router.push(WEBSITE_ORDER_DETAILS(savedOrderId))
                         setSavingOrder(false)
                     } else {
                         showToast('error', paymentResponseData.message)
@@ -484,6 +528,12 @@ const Checkout = () => {
                                             </td>
                                         </tr>
                                         <tr>
+                                            <td className='font-medium py-2'>Shipping Charge</td>
+                                            <td className='text-end py-2'>
+                                                {shippingCharge.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                            </td>
+                                        </tr>
+                                        <tr>
                                             <td className='font-medium py-2'>Discount</td>
                                             <td className='text-end py-2'>
                                                 - {discount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
@@ -503,6 +553,20 @@ const Checkout = () => {
                                         </tr>
                                     </tbody>
                                 </table>
+
+                                <div className='mt-4'>
+                                    <h5 className='font-medium mb-2'>Payment Method</h5>
+                                    <div className='flex gap-4 items-center'>
+                                        <label className='flex items-center gap-2'>
+                                            <input type='radio' name='paymentMethod' value='RAZORPAY' checked={paymentMethod==='RAZORPAY'} onChange={()=>setPaymentMethod('RAZORPAY')} />
+                                            <span className='ml-1'>Online Payment (Razorpay)</span>
+                                        </label>
+                                        <label className='flex items-center gap-2'>
+                                            <input type='radio' name='paymentMethod' value='COD' checked={paymentMethod==='COD'} onChange={()=>setPaymentMethod('COD')} />
+                                            <span className='ml-1'>Cash on Delivery (COD)</span>
+                                        </label>
+                                    </div>
+                                </div>
 
                                 <div className='mt-2 mb-5'>
                                     {!isCouponApplied

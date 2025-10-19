@@ -25,9 +25,12 @@ export async function POST(request) {
             name: true, email: true, phone: true, country: true, state: true, city: true, pincode: true, landmark: true, ordernote: true
         }).extend({
             userId: z.string().optional(),
-            razorpay_payment_id: z.string().min(3, 'Payment id is required.'),
-            razorpay_order_id: z.string().min(3, 'Order id is required.'),
-            razorpay_signature: z.string().min(3, 'Signature is required.'),
+            // Razorpay fields are optional for COD
+            razorpay_payment_id: z.string().min(3, 'Payment id is required.').optional(),
+            razorpay_order_id: z.string().min(3, 'Order id is required.').optional(),
+            razorpay_signature: z.string().min(3, 'Signature is required.').optional(),
+            paymentMethod: z.string().optional(),
+            shippingCharge: z.number().nonnegative().optional(),
             subtotal: z.number().nonnegative(),
             discount: z.number().nonnegative(),
             couponDiscountAmount: z.number().nonnegative(),
@@ -43,15 +46,24 @@ export async function POST(request) {
 
         const validatedData = validate.data
 
-        // payment verification 
-        const verification = validatePaymentVerification({
-            order_id: validatedData.razorpay_order_id,
-            payment_id: validatedData.razorpay_payment_id
-        }, validatedData.razorpay_signature, process.env.RAZORPAY_KEY_SECRET)
-
+        // payment verification for Razorpay only
         let paymentVerification = false
-        if (verification) {
-            paymentVerification = true
+        if (validatedData.paymentMethod && validatedData.paymentMethod.toUpperCase() === 'RAZORPAY') {
+            const verification = validatePaymentVerification({
+                order_id: validatedData.razorpay_order_id,
+                payment_id: validatedData.razorpay_payment_id
+            }, validatedData.razorpay_signature, process.env.RAZORPAY_KEY_SECRET)
+
+            if (verification) paymentVerification = true
+        }
+
+        // For COD, generate simple order id and set payment fields accordingly
+        let orderIdToStore = validatedData.razorpay_order_id || ''
+        let paymentIdToStore = validatedData.razorpay_payment_id || ''
+        if (!validatedData.razorpay_order_id && validatedData.paymentMethod && validatedData.paymentMethod.toUpperCase() === 'COD') {
+            // create a simple unique order id: prefix + timestamp
+            orderIdToStore = `COD_${Date.now()}`
+            paymentIdToStore = `COD_${Date.now()}`
         }
 
         const newOrder = await OrderModel.create({
@@ -70,15 +82,16 @@ export async function POST(request) {
             couponDiscountAmount: validatedData.couponDiscountAmount,
             totalAmount: validatedData.totalAmount,
             subtotal: validatedData.subtotal,
-            payment_id: validatedData.razorpay_payment_id,
-            order_id: validatedData.razorpay_order_id,
-            status: paymentVerification ? 'pending' : 'unverified'
+            payment_id: paymentIdToStore,
+            order_id: orderIdToStore,
+            status: (validatedData.paymentMethod && validatedData.paymentMethod.toUpperCase() === 'COD') ? 'pending' : (paymentVerification ? 'pending' : 'unverified'),
+            shippingCharge: validatedData.shippingCharge || 0
         })
 
         try {
             const mailData = {
-                order_id: validatedData.razorpay_order_id,
-                orderDetailsUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/order-details/${validatedData.razorpay_order_id}`
+                order_id: orderIdToStore,
+                orderDetailsUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/order-details/${orderIdToStore}`
             }
 
             await sendMail('Order placed successfully.', validatedData.email, orderNotification(mailData))
@@ -88,7 +101,8 @@ export async function POST(request) {
         }
 
 
-        return response(true, 200, 'Order placed successfully.')
+    // Return the saved order's MongoDB _id for consistent routing
+    return response(true, 200, 'Order placed successfully.', newOrder._id)
 
     } catch (error) {
         return catchError(error)

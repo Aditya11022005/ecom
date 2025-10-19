@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/databaseConnection"
 import { catchError, response } from "@/lib/helperFunction"
 import { zSchema } from "@/lib/zodSchema"
 import ProductModel from "@/models/Product.model"
+import ProductVariantModel from "@/models/ProductVariant.model"
 import { encode } from "entities"
 
 export async function POST(request) {
@@ -27,6 +28,7 @@ export async function POST(request) {
         })
 
 
+
         const validate = schema.safeParse(payload)
         if (!validate.success) {
             return response(false, 400, 'Invalid or missing fields.', validate.error)
@@ -43,9 +45,30 @@ export async function POST(request) {
             discountPercentage: productData.discountPercentage,
             description: encode(productData.description),
             media: productData.media,
+            rentAvailable: productData.rentAvailable || false,
+            rentLink: productData.rentLink || "",
         })
 
         await newProduct.save()
+
+        // Create a default variant so the product shows up in the shop
+        try {
+            const defaultSku = `SKU_${newProduct.slug || newProduct._id}_${Date.now()}`
+            const defaultVariant = new ProductVariantModel({
+                product: newProduct._id,
+                color: productData.color || 'Default',
+                size: productData.size || 'One Size',
+                mrp: productData.mrp,
+                sellingPrice: productData.sellingPrice,
+                discountPercentage: productData.discountPercentage,
+                sku: defaultSku,
+                media: productData.media || [],
+            })
+            await defaultVariant.save()
+        } catch (err) {
+            // do not block product creation if variant creation fails
+            console.error('Failed to create default variant for product:', err)
+        }
 
         return response(true, 200, 'Product added successfully.')
 

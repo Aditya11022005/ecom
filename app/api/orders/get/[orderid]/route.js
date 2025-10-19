@@ -15,10 +15,21 @@ export async function GET(request, { params }) {
             return response(false, 404, 'Order not found.')
         }
 
-        const orderData = await OrderModel.findOne({ order_id: orderid }).populate('products.productId', 'name slug').populate({
+        // Try to fetch by custom order_id first; if not found and param is a valid ObjectId, try by _id
+        const orderDataByOrderId = await OrderModel.findOne({ order_id: orderid }).populate('products.productId', 'name slug').populate({
             path: 'products.variantId',
             populate: { path: 'media' }
         }).lean()
+        let orderData = orderDataByOrderId
+
+        // If not found by order_id, and orderid looks like an ObjectId, try findById
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(orderid)
+        if (!orderData && isObjectId) {
+            orderData = await OrderModel.findById(orderid).populate('products.productId', 'name slug').populate({
+                path: 'products.variantId',
+                populate: { path: 'media' }
+            }).lean()
+        }
 
         if (!orderData) {
             return response(false, 404, 'Order not found.')

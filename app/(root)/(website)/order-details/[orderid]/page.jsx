@@ -26,6 +26,8 @@ const OrderDetails = async ({ params }) => {
                             <p><b>Order Id:</b> {orderData?.data?.order_id}</p>
                             <p><b>Transaction Id:</b> {orderData?.data?.payment_id}</p>
                             <p className="capitalize"><b>Status:</b> {orderData?.data?.status}</p>
+                            <p><b>Payment Method:</b> {orderData?.data?.paymentMethod || (orderData?.data?.payment_id?.startsWith('COD_') ? 'COD' : 'Online')}</p>
+                            <p><b>Shipping Charge:</b> {orderData?.data?.shippingCharge ? orderData?.data?.shippingCharge.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : '---'}</p>
                         </div>
                         <table className="w-full border">
                             <thead className="border-b bg-gray-50 md:table-header-group hidden">

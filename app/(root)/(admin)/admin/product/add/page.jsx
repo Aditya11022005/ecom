@@ -48,6 +48,9 @@ const AddProduct = () => {
     sellingPrice: true,
     discountPercentage: true,
     description: true,
+    // rent fields
+    rentAvailable: true,
+    rentLink: true,
   })
 
   const form = useForm({
@@ -60,6 +63,8 @@ const AddProduct = () => {
       sellingPrice: 0,
       discountPercentage: 0,
       description: "",
+      rentAvailable: false,
+      rentLink: "",
     },
   })
 
@@ -225,6 +230,38 @@ const AddProduct = () => {
                   <FormLabel className="mb-2">Description <span className='text-red-500'>*</span></FormLabel>
                   <Editor onChange={editor} />
                   <FormMessage></FormMessage>
+                </div>
+
+                <div className=''>
+                  <FormField
+                    control={form.control}
+                    name="rentAvailable"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rent Available</FormLabel>
+                        <FormControl>
+                          <input type="checkbox" {...field} checked={field.value} onChange={(e) => field.onChange(e.target.checked)} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className=''>
+                  <FormField
+                    control={form.control}
+                    name="rentLink"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rent Link</FormLabel>
+                        <FormControl>
+                          <Input type="text" placeholder="Enter rent link (e.g., WP link)" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
               </div>

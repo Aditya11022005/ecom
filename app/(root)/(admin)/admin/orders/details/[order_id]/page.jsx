@@ -83,6 +83,9 @@ const OrderDetails = ({ params }) => {
                                 <p><b>Order Id:</b> {orderData?.order_id}</p>
                                 <p><b>Transaction Id:</b> {orderData?.payment_id}</p>
                                 <p className="capitalize"><b>Status:</b> {orderData?.status}</p>
+                                <p><b>Payment Method:</b> {orderData?.paymentMethod || (orderData?.payment_id?.startsWith('COD_') ? 'COD' : 'Online')}</p>
+                                <p><b>Payment Status:</b> { (orderData?.paymentMethod && orderData?.paymentMethod.toUpperCase()==='COD') || (orderData?.payment_id && orderData?.payment_id.toString().startsWith('COD_')) ? 'Unpaid' : (orderData?.payment_id ? 'Paid' : 'Unpaid') }</p>
+                                <p><b>Shipping Charge:</b> {orderData?.shippingCharge ? orderData?.shippingCharge.toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) : '---'}</p>
                             </div>
                             <table className="w-full border">
                                 <thead className="border-b bg-gray-50 dark:bg-card md:table-header-group hidden">

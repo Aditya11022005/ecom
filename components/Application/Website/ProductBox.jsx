@@ -6,22 +6,38 @@ import { WEBSITE_PRODUCT_DETAILS } from '@/routes/WebsiteRoute'
 const ProductBox = ({ product }) => {
 
     return (
-        <div className='rounded-lg hover:shadow-lg border overflow-hidden'>
+        <div className='rounded-lg hover:shadow-lg border overflow-hidden relative'>
             <Link href={WEBSITE_PRODUCT_DETAILS(product.slug)}>
-                <Image
-                    src={product?.media[0]?.secure_url || imgPlaceholder.src}
-                    width={400}
-                    height={400}
-                    alt={product?.media[0]?.alt || product?.name}
-                    title={product?.media[0]?.title || product?.name}
-                    className='w-full lg:h-[300px] sm:h-[250px] h-[150px] object-cover object-top'
-                />
+                <div className='relative'>
+                    <Image
+                        src={product?.media[0]?.secure_url || imgPlaceholder.src}
+                        width={400}
+                        height={400}
+                        alt={product?.media[0]?.alt || product?.name}
+                        title={product?.media[0]?.title || product?.name}
+                        className='w-full lg:h-[300px] sm:h-[250px] h-[150px] object-cover object-top'
+                    />
+
+                    {/* Discount badge (red) top-left */}
+                    {product?.mrp > product?.sellingPrice && (
+                        <span className='absolute top-2 left-2 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded'>
+                            {Math.round(((product.mrp - product.sellingPrice) / product.mrp) * 100)}% OFF
+                        </span>
+                    )}
+                </div>
                 <div className="p-3 border-t">
                     <h4>{product?.name}</h4>
-                    <p className='flex gap-2 text-sm mt-2'>
+                    <p className='flex gap-2 text-sm mt-2 items-center'>
                         <span className='line-through text-gray-400'>{product?.mrp.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                         <span className='font-semibold'>{product?.sellingPrice.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                     </p>
+
+                    {/* Rent button: show when rentAvailable is true and rentLink provided */}
+                    {product?.rentAvailable && (
+                        <div className='mt-3'>
+                            <a href={product?.rentLink || '#'} target="_blank" rel="noreferrer" className='inline-block bg-gray-900 text-white px-3 py-2 rounded text-sm'>Rent</a>
+                        </div>
+                    )}
                 </div>
             </Link>
         </div>
