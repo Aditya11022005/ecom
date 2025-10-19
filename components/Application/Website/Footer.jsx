@@ -35,19 +35,19 @@ const Footer = () => {
                     <h4 className='text-xl font-bold uppercase mb-5'>Categories</h4>
                     <ul>
                         <li className='mb-2 text-gray-500'>
-                            <Link href={`${WEBSITE_SHOP}?category=t-shirts`}>T-shirt</Link>
+                            <Link href={`${WEBSITE_SHOP}?category=t-shirts`}>Partyware</Link>
                         </li>
                         <li className='mb-2 text-gray-500'>
-                            <Link href={`${WEBSITE_SHOP}?category=hoodies`}>Hoodies</Link>
+                            <Link href={`${WEBSITE_SHOP}?category=hoodies`}>Drep-saree</Link>
                         </li>
                         <li className='mb-2 text-gray-500'>
-                            <Link href={`${WEBSITE_SHOP}?category=oversized`}>Oversized</Link>
+                            <Link href={`${WEBSITE_SHOP}?category=oversized`}>Functional Wear</Link>
                         </li>
                         <li className='mb-2 text-gray-500'>
-                            <Link href={`${WEBSITE_SHOP}?category=full-sleeves`}>Full Sleeves</Link>
+                            <Link href={`${WEBSITE_SHOP}?category=full-sleeves`}>Midi & Maxi dress</Link>
                         </li>
                         <li className='mb-2 text-gray-500'>
-                            <Link href={`${WEBSITE_SHOP}?category=polo`}>Polo</Link>
+                            <Link href={`${WEBSITE_SHOP}?category=polo`}>Indo-Western Wear</Link>
                         </li>
                     </ul>
                 </div>
