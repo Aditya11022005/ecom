@@ -68,8 +68,7 @@ const EditProduct = ({ params }) => {
       sellingPrice: 0,
       discountPercentage: 0,
       description: "",
-      rentAvailable: false,
-      rentLink: "",
+  // rent fields removed
     },
   })
 
@@ -86,8 +85,7 @@ const EditProduct = ({ params }) => {
         sellingPrice: product?.sellingPrice,
         discountPercentage: product?.discountPercentage,
         description: product?.description,
-          rentAvailable: product?.rentAvailable || false,
-          rentLink: product?.rentLink || "",
+          // rent fields removed
       })
 
       if (product.media) {
@@ -264,37 +262,7 @@ const EditProduct = ({ params }) => {
                   <FormMessage></FormMessage>
                 </div>
 
-                  <div className=''>
-                    <FormField
-                      control={form.control}
-                      name="rentAvailable"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Rent Available</FormLabel>
-                          <FormControl>
-                            <input type="checkbox" {...field} checked={field.value} onChange={(e) => field.onChange(e.target.checked)} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className=''>
-                    <FormField
-                      control={form.control}
-                      name="rentLink"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Rent Link</FormLabel>
-                          <FormControl>
-                            <Input type="text" placeholder="Enter rent link (e.g., WP link)" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  {/* rent fields removed */}
 
               </div>
 

@@ -24,7 +24,7 @@ export async function POST(request) {
             sellingPrice: true,
             discountPercentage: true,
             description: true,
-            media: true
+            media: true,
         })
 
 
@@ -45,8 +45,7 @@ export async function POST(request) {
             discountPercentage: productData.discountPercentage,
             description: encode(productData.description),
             media: productData.media,
-            rentAvailable: productData.rentAvailable || false,
-            rentLink: productData.rentLink || "",
+            // rent fields removed
         })
 
         await newProduct.save()
@@ -56,8 +55,8 @@ export async function POST(request) {
             const defaultSku = `SKU_${newProduct.slug || newProduct._id}_${Date.now()}`
             const defaultVariant = new ProductVariantModel({
                 product: newProduct._id,
-                color: productData.color || 'Default',
-                size: productData.size || 'One Size',
+                color: 'Default',
+                size: 'One Size',
                 mrp: productData.mrp,
                 sellingPrice: productData.sellingPrice,
                 discountPercentage: productData.discountPercentage,

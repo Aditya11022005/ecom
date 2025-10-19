@@ -24,7 +24,9 @@ export async function PUT(request) {
             sellingPrice: true,
             discountPercentage: true,
             description: true,
-            media: true
+            media: true,
+            color: true,
+            size: true
         })
         const validate = schema.safeParse(payload)
         if (!validate.success) {
@@ -46,8 +48,7 @@ export async function PUT(request) {
         getProduct.discountPercentage = validatedData.discountPercentage
         getProduct.description = encode(validatedData.description)
         getProduct.media = validatedData.media
-    getProduct.rentAvailable = validatedData.rentAvailable || false
-    getProduct.rentLink = validatedData.rentLink || ""
+    // rent fields removed
         await getProduct.save()
 
         return response(true, 200, 'Product updated successfully.')

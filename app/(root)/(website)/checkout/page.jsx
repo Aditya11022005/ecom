@@ -47,6 +47,7 @@ const Checkout = () => {
     const [couponCode, setCouponCode] = useState('')
     const [shippingCharge, setShippingCharge] = useState(99)
     const [paymentMethod, setPaymentMethod] = useState('RAZORPAY')
+    const COD_CHARGE = 50
 
     const [placingOrder, setPlacingOrder] = useState(false)
     const [savingOrder, setSavingOrder] = useState(false)
@@ -62,6 +63,11 @@ const Checkout = () => {
     }, [getVerifiedCartData])
 
 
+    const computeTotal = (subTotalAmount, couponAmt, shipCharge, payMethod) => {
+        const cod = payMethod === 'COD' ? COD_CHARGE : 0
+        return subTotalAmount - (couponAmt || 0) + (shipCharge || 0) + cod
+    }
+
     useEffect(() => {
         const cartProducts = cart.products
 
@@ -69,14 +75,14 @@ const Checkout = () => {
 
         const discount = cartProducts.reduce((sum, product) => sum + ((product.mrp - product.sellingPrice) * product.qty), 0)
 
-    setSubTotal(subTotalAmount)
-    setDiscount(discount)
-    // include shipping charge by default
-    setTotalAmount(subTotalAmount + shippingCharge)
+        setSubTotal(subTotalAmount)
+        setDiscount(discount)
+        // compute total including shipping and COD (if selected) and coupon
+        setTotalAmount(computeTotal(subTotalAmount, couponDiscountAmount, shippingCharge, paymentMethod))
 
         couponForm.setValue('minShoppingAmount', subTotalAmount)
 
-    }, [cart])
+    }, [cart, shippingCharge, paymentMethod, couponDiscountAmount])
 
 
 
@@ -534,6 +540,12 @@ const Checkout = () => {
                                             </td>
                                         </tr>
                                         <tr>
+                                            <td className='font-medium py-2'>COD Fee</td>
+                                            <td className='text-end py-2'>
+                                                { (paymentMethod==='COD' ? COD_CHARGE : 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' }) }
+                                            </td>
+                                        </tr>
+                                        <tr>
                                             <td className='font-medium py-2'>Discount</td>
                                             <td className='text-end py-2'>
                                                 - {discount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
@@ -548,7 +560,7 @@ const Checkout = () => {
                                         <tr>
                                             <td className='font-medium py-2 text-xl'>Total</td>
                                             <td className='text-end py-2'>
-                                                {totalAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
+                                                {computeTotal(subtotal, couponDiscountAmount, shippingCharge, paymentMethod).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
                                             </td>
                                         </tr>
                                     </tbody>
@@ -589,6 +601,8 @@ const Checkout = () => {
 
                                                     </FormField>
                                                 </div>
+
+                                            {/* note moved below totals */}
                                                 <div className='w-[100px]'>
                                                     <ButtonLoading type="submit" text="Apply" className="w-full cursor-pointer" loading={couponLoading} />
                                                 </div>
@@ -605,6 +619,14 @@ const Checkout = () => {
                                             </button>
                                         </div>
                                     }
+                                </div>
+
+                                {/* moved note: show shipping and COD info below totals and coupon */}
+                                <div className='mt-4'>
+                                    <div className='rounded bg-white p-3 border'>
+                                        <p className='text-sm text-gray-700 mb-1'>Shipping charge of {shippingCharge.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} is applied to every order.</p>
+                                        <p className='text-sm text-gray-700'>Note: Cash on Delivery (COD) will add an extra {COD_CHARGE.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} to your order.</p>
+                                    </div>
                                 </div>
 
                             </div>

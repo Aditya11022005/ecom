@@ -30,15 +30,6 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    // Rent fields
-    rentAvailable: {
-        type: Boolean,
-        default: false,
-    },
-    rentLink: {
-        type: String,
-        default: "",
-    },
     media: [
         {
             type: mongoose.Schema.Types.ObjectId,
