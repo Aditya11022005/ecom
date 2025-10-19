@@ -70,6 +70,11 @@ const Header = () => {
                                     Shop
                                 </Link>
                             </li>
+                            <li className='text-gray-600 hover:text-primary hover:font-semibold'>
+                                <Link href="/appointment" className='block py-2'>
+                                    Appointment
+                                </Link>
+                            </li>
                         
                         </ul>
                     </nav>

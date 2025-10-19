@@ -9,14 +9,14 @@ const ProductBox = ({ product }) => {
         <div className='rounded-lg hover:shadow-lg border overflow-hidden relative'>
             <div>
                 <Link href={WEBSITE_PRODUCT_DETAILS(product.slug)} className='block'>
-                    <div className='relative'>
+                    <div className='relative overflow-hidden'>
                         <Image
                                 src={product?.media[0]?.secure_url || imgPlaceholder.src}
                                 width={400}
                                 height={400}
                                 alt={product?.media[0]?.alt || product?.name}
                                 title={product?.media[0]?.title || product?.name}
-                                className='w-full lg:h-[300px] sm:h-[250px] h-[150px] object-cover object-top'
+                                className='w-full lg:h-[300px] sm:h-[250px] h-[150px] object-cover object-top transform transition-transform duration-300 ease-in-out hover:scale-105'
                             />
 
                             {/* Discount badge (red) top-left */}
